@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SS5212 Lecture 10 Practice Quiz</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: Arial, sans-serif;
+    line-height: 1.55;
+    color: #243047;
+    background: #f3f6fb;
+  }
+
+  .container {
+    max-width: 850px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    color: #29457d;
+    line-height: 1.25;
+  }
+
+  .card, .question, .result {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  }
+
+  .question h2 {
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+
+  label {
+    display: block;
+    padding: 11px;
+    margin: 7px 0;
+    border-radius: 8px;
+    background: #f7f9fc;
+    cursor: pointer;
+  }
+
+  label:hover {
+    background: #edf2ff;
+  }
+
+  input[type="radio"] {
+    margin-right: 8px;
+  }
+
+  button {
+    border: 0;
+    border-radius: 8px;
+    padding: 13px 18px;
+    margin: 8px 8px 8px 0;
+    background: #3158ad;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #24458e;
+  }
+
+  .reset {
+    background: #69758a;
+  }
+
+  .feedback {
+    display: none;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #edf3ff;
+  }
+
+  .result {
+    display: none;
+    border-left: 5px solid #3158ad;
+  }
+
+  .correct {
+    color: #14743a;
+  }
+
+  .incorrect {
+    color: #b42929;
+  }
+
+  .small {
+    color: #526078;
+    font-size: 0.9rem;
+  }
+
+  #progress {
+    color: #31529b;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>SS5212 Lecture 10 Practice Quiz</h1>
+
+  <div class="card">
+    <p><strong>50 original multiple-choice questions</strong></p>
+
+    <p>
+      Choose one answer for each question. Topics and classifications
+      appear only after you submit your answers.
+    </p>
+
+    <p>
+      For questions asking you to calculate a score, use the
+      <strong>conventional 10-category ACE framework</strong> and count
+      only the categories supported by the information given.
+    </p>
+
+    <p class="small">
+      This is an original practice quiz, not a verified CityU past paper.
+    </p>
+
+    <p class="small">
+      The quiz attempts to save question order, option order and answers
+      in this browser. Progress does not automatically sync to other
+      devices. Clearing browser data or private browsing may remove it.
+    </p>
+
+    <p id="progress" aria-live="polite"></p>
+    <p id="storageMessage" class="small" aria-live="polite"></p>
+  </div>
+
+  <div id="result" class="result" aria-live="polite"></div>
+
+  <form id="quiz"></form>
+
+  <button type="button" id="submitButton">
+    Submit answers
+  </button>
+
+  <button type="button" id="resetButton" class="reset">
+    Reset quiz
+  </button>
+
+</div>
+
+<script>
+/*
+  題目資料格式：
+
+  [
+    交卷後顯示的主題,
+    "Core" 或 "Supplementary",
+    英文題目,
+    四個選項,
+    中文解析
+  ]
+
+  資料中的第一個選項是正確答案。
+  網頁會隨機排列題目及選項。
+
+  作答前不顯示題目主題或分類。
+*/
+
+const questions = [
+
+  // ==================================================
+  // CORE QUESTIONS
+  // ==================================================
+
+  [
+    "Positive stress", "Core",
+    "A student is nervous before giving a presentation. With preparation and encouragement, she completes it and feels more confident about handling future challenges. Which classification best fits the experience described?",
+    [
+      "Positive stress",
+      "Tolerable stress",
+      "Toxic stress",
+      "Allostatic overload"
+    ],
+    "短暫挑戰在準備及支持下被應對，並帶來掌握感，最符合 positive stress。"
+  ],
+
+  [
+    "Tolerable stress", "Core",
+    "A child experiences the death of a close relative. The loss cannot be reversed, but caring adults provide consistent support and help the child cope. Which classification best fits the lecture's framework?",
+    [
+      "Tolerable stress",
+      "Positive stress",
+      "Toxic stress",
+      "Absence of stress"
+    ],
+    "喪親是嚴重負面事件，但穩定的支持可緩衝影響，較符合 tolerable stress；不代表孩子不會悲傷。"
+  ],
+
+  [
+    "Toxic stress", "Core",
+    "A child is repeatedly exposed to frightening and unpredictable violence over several years. There is no reliably supportive adult available. Which response pattern is of greatest concern?",
+    [
+      "Toxic stress",
+      "Positive stress",
+      "A brief challenge with mastery",
+      "No stress response"
+    ],
+    "長期、難以控制的嚴重逆境，加上缺乏足夠支持，是 toxic stress 的重要條件。"
+  ],
+
+  [
+    "Stress response — Role of support", "Core",
+    "Two children face the same serious family disruption. One has reliable emotional support; the other has no consistent source of support. What is the most defensible conclusion?",
+    [
+      "Support may change how the children experience and cope with the event",
+      "The event must have exactly the same impact on both children",
+      "Support eliminates all emotional distress",
+      "The unsupported child will definitely develop a disorder"
+    ],
+    "支持資源可能影響壓力的經驗和後果，但不能保證完全沒有痛苦，也不能確定某人一定患病。"
+  ],
+
+  [
+    "Positive versus tolerable stress", "Core",
+    "A student completes a challenging but manageable interview and gains confidence. Another student faces a serious loss while receiving strong family support. Which pairing is most appropriate?",
+    [
+      "Positive stress; tolerable stress",
+      "Tolerable stress; positive stress",
+      "Toxic stress; positive stress",
+      "Positive stress; toxic stress"
+    ],
+    "可應付的挑戰帶來掌握感，較符合 positive；嚴重負面事件有足夠支持，較符合 tolerable。"
+  ],
+
+  [
+    "Tolerable versus toxic stress", "Core",
+    "Which difference is most useful when distinguishing tolerable from toxic stress in the lecture's framework?",
+    [
+      "The duration and controllability of adversity, together with available support",
+      "Whether the person is over or under age 18",
+      "Whether the event has a formal name",
+      "Whether the person reports any sadness"
+    ],
+    "應考慮壓力的持續性、程度及可控制性，也要評估個人及人際支持。"
+  ],
+
+  [
+    "Stress classification — Evidence", "Core",
+    "A child has moved to a new school and feels nervous. No information is available about the duration, severity or support received. What is the most defensible assessment?",
+    [
+      "Gather more information before classifying the response",
+      "Conclude that the child has toxic stress",
+      "Conclude that the child has no stress",
+      "Diagnose a stress-related disorder immediately"
+    ],
+    "單憑緊張不足以分類；需要了解事件及反應的持續時間、程度與支持。"
+  ],
+
+  [
+    "Protective relationships", "Core",
+    "A social worker cannot immediately change a family's housing crisis. The worker helps the child establish a dependable relationship with a supportive adult while coordinating practical assistance. What is the rationale?",
+    [
+      "Supportive relationships and resources may buffer the effects of adversity",
+      "A supportive adult guarantees that the child will never experience distress",
+      "Practical assistance is irrelevant to stress",
+      "The child must independently solve the housing crisis"
+    ],
+    "穩定關係及實際資源可以緩衝逆境影響，但不是保證完全沒有負面反應。"
+  ],
+
+  [
+    "Duration and frequency", "Core",
+    "A researcher compares a brief, manageable challenge with repeated, severe and uncontrollable adversity. Why is the second situation potentially more concerning?",
+    [
+      "Frequent and prolonged activation can place greater demands on stress-response systems",
+      "All stress responses are harmful regardless of duration",
+      "A short challenge always causes permanent damage",
+      "The number of stressors is the only relevant factor"
+    ],
+    "頻繁、長期及嚴重的壓力可能增加身體系統負擔；仍需考慮支持及個體處境。"
+  ],
+
+  [
+    "Toxic stress — Avoiding certainty", "Core",
+    "An adult reports prolonged childhood adversity and limited support. Which statement is most responsible?",
+    [
+      "The history may be relevant to health risk, but it does not determine an individual's outcome",
+      "The history proves that the person has a particular disease",
+      "The person cannot show resilience",
+      "Any health difficulty must have been caused by childhood adversity"
+    ],
+    "逆境與健康風險有關，但不能據此預測個人必然結果或直接推定因果。"
+  ],
+
+  [
+    "Homeostasis", "Core",
+    "On a hot day, a person's body produces sweat, helping regulate body temperature. Which concept is most directly illustrated?",
+    [
+      "Homeostasis",
+      "Allostatic overload",
+      "Household dysfunction",
+      "Ego transcendence"
+    ],
+    "出汗有助調節體溫，反映身體維持內部生理平衡的 homeostasis。"
+  ],
+
+  [
+    "Allostasis", "Core",
+    "During an immediate threat, a person's heart rate rises to help the body respond. The response later settles when the danger has passed. Which concept most directly describes the adaptive adjustment?",
+    [
+      "Allostasis",
+      "Allostatic overload",
+      "An ACE score",
+      "A fixed disease diagnosis"
+    ],
+    "Allostasis 指身體透過調節系統應付需求及威脅；短期適應本身不等於生理損耗。"
+  ],
+
+  [
+    "Allostatic load", "Core",
+    "A researcher studies the cumulative physiological burden associated with repeated activation of stress-response systems over many years. Which term best describes this burden?",
+    [
+      "Allostatic load",
+      "Homeostasis",
+      "Positive stress",
+      "Chronological age"
+    ],
+    "Allostatic load 是反覆或長期調適所累積的生理負荷，不能只理解成某次即時反應。"
+  ],
+
+  [
+    "Homeostasis versus allostasis", "Core",
+    "A practitioner distinguishes between maintaining physiological balance and the adaptive changes that help the body respond to a challenge. Which pairing is most appropriate?",
+    [
+      "Homeostasis; allostasis",
+      "Allostatic overload; homeostasis",
+      "Allostasis; ACE score",
+      "Toxic stress; chronological age"
+    ],
+    "Homeostasis 著重維持生理平衡；allostasis 著重透過調節來應付不同需求。"
+  ],
+
+  [
+    "Allostasis versus load", "Core",
+    "A person's blood pressure rises temporarily during a threat. Years of repeated activation are later associated with physiological wear. Which pairing best describes the two ideas?",
+    [
+      "Allostasis; allostatic load",
+      "Allostatic load; positive stress",
+      "Homeostasis; a single ACE category",
+      "Toxic stress; a parenting style"
+    ],
+    "短期調節可視為 allostasis；反覆調節所累積的生理負擔是 allostatic load。"
+  ],
+
+  [
+    "Acute response", "Core",
+    "A person hears a sudden alarm, becomes alert and moves away from danger. Which interpretation best reflects the function of an immediate stress response?",
+    [
+      "It can help the person respond to a threat in the short term",
+      "It is always evidence of permanent physiological damage",
+      "It proves the person has experienced childhood adversity",
+      "It has no relationship to survival"
+    ],
+    "短期壓力反應可以具保護作用；即時反應不自動等於永久損害。"
+  ],
+
+  [
+    "Chronic stress and health", "Core",
+    "A client has faced prolonged financial insecurity and repeated discrimination. What is the most appropriate way to discuss possible health implications?",
+    [
+      "Long-term adversity can be associated with increased health risks, while outcomes vary",
+      "These experiences guarantee a specific illness",
+      "Stress can never affect physical health",
+      "A disease diagnosis can be made without assessment"
+    ],
+    "長期逆境可能與健康風險上升有關，但個人結果受多種因素影響，不能直接診斷。"
+  ],
+
+  [
+    "Cortisol", "Core",
+    "During a stress response, a hormone helps make glucose more available for use by the body. Which hormone is most directly described?",
+    [
+      "Cortisol",
+      "Melatonin",
+      "Insulin only",
+      "A digestive enzyme"
+    ],
+    "根據講義，cortisol 有助增加血液中的葡萄糖可用量，支持身體應付壓力。"
+  ],
+
+  [
+    "Cortisol and stress", "Core",
+    "Which statement about cortisol best fits the lecture?",
+    [
+      "It participates in stress adaptation and can affect the availability of glucose",
+      "Its presence always proves toxic stress",
+      "It has no role in the body's response to demands",
+      "It is an ACE category"
+    ],
+    "Cortisol 參與正常生理調節及壓力適應；單憑它的存在不能判斷 toxic stress。"
+  ],
+
+  [
+    "Stress-response systems", "Core",
+    "During an immediate threat, breathing and heart rate increase while several bodily systems coordinate their activity. Which interpretation is best?",
+    [
+      "The stress response involves interacting systems rather than a single organ acting alone",
+      "Only the digestive system can respond",
+      "The brain cannot communicate with other organs",
+      "All bodily activity stops"
+    ],
+    "壓力反應涉及神經、心血管、內分泌等多個互相協作的系統。"
+  ],
+
+  [
+    "Cardiovascular response", "Core",
+    "A person experiences a rapid heartbeat during an acute threat. In the lecture's account, which system helps circulate oxygen-rich blood to the brain and muscles?",
+    [
+      "Cardiovascular system",
+      "A household support network",
+      "Digestive system alone",
+      "A moral reasoning system"
+    ],
+    "心血管系統協助輸送血液、氧氣及養分，以支持應對威脅。"
+  ],
+
+  [
+    "Metabolic response", "Core",
+    "During a stress response, the body adjusts energy availability to meet immediate demands. Which system is most directly involved?",
+    [
+      "Metabolic systems",
+      "The microsystem only",
+      "The attachment system only",
+      "A social identity hierarchy"
+    ],
+    "代謝系統參與調整能量供應，支持身體細胞、組織和器官的活動。"
+  ],
+
+  [
+    "Neuroendocrine response", "Core",
+    "A social work student is asked which system helps regulate hormonal aspects of the body's adaptation to perceived demands. Which answer is best?",
+    [
+      "Neuroendocrine system",
+      "A school board",
+      "An interpersonal relationship alone",
+      "A legal classification system"
+    ],
+    "神經內分泌系統參與荷爾蒙調節，並與大腦及其他身體系統互相作用。"
+  ],
+
+  [
+    "ACE — Direct harm", "Core",
+    "A child is repeatedly humiliated and threatened by a caregiver. Which ACE category is most directly supported by this information?",
+    [
+      "Emotional abuse",
+      "Physical neglect",
+      "Parental incarceration",
+      "Parental separation"
+    ],
+    "反覆羞辱及威脅較直接指向 emotional abuse；其他類別沒有足夠資料支持。"
+  ],
+
+  [
+    "ACE — Neglect", "Core",
+    "A child's caregivers repeatedly fail to provide necessary food and basic physical care, despite being aware of the child's needs. Which category is most directly indicated?",
+    [
+      "Physical neglect",
+      "Emotional abuse",
+      "Parental incarceration",
+      "Parental separation"
+    ],
+    "未提供必要食物及基本身體照顧，最直接指向 physical neglect。"
+  ],
+
+  [
+    "ACE — Household challenge", "Core",
+    "A child lives with a parent whose problematic alcohol use repeatedly disrupts family life. Which category is most directly supported?",
+    [
+      "Household substance misuse",
+      "Physical abuse",
+      "Emotional neglect",
+      "Parental incarceration"
+    ],
+    "家長的問題性酒精使用屬家庭中的 substance misuse；不能推定同時存在其他 ACE。"
+  ],
+
+  [
+    "ACE — Household violence", "Core",
+    "A child repeatedly witnesses his father physically assaulting his mother. Which category is directly supported in the lecture's conventional home-based framework?",
+    [
+      "Violence against the mother",
+      "The child's own physical abuse",
+      "Parental incarceration",
+      "Parental mental illness"
+    ],
+    "題目明確描述目睹父親對母親施暴；不能假設孩子本人亦遭身體虐待或父親曾入獄。"
+  ],
+
+  [
+    "ACE — Avoiding assumptions", "Core",
+    "A client reports parental separation during childhood. No other childhood details are provided. Which conclusion is most defensible?",
+    [
+      "Parental separation is supported, but other ACE categories cannot be assumed",
+      "The client necessarily experienced physical abuse",
+      "Both parents must have had mental illness",
+      "The information proves toxic stress"
+    ],
+    "只能確認題目提及的家庭分離類別；不能推斷其他逆境或直接判定 toxic stress。"
+  ],
+
+  [
+    "ACE — Direct and indirect experiences", "Core",
+    "A child is directly subjected to physical abuse and also lives with a parent who has been incarcerated. Which pairing best describes the two experiences?",
+    [
+      "Direct harm to the child; household challenge",
+      "Two examples of positive stress",
+      "Two identical incidents of one category",
+      "A biological trait; a personality trait"
+    ],
+    "身體虐待是直接傷害孩子；家長入獄屬家庭功能失調／家庭挑戰類別。"
+  ],
+
+  [
+    "ACE and support", "Core",
+    "A child has experienced an ACE and has a dependable adult who provides emotional support. Which statement is most accurate?",
+    [
+      "The experience may be an ACE, while support is relevant to understanding its impact",
+      "Support means the experience cannot count as an ACE",
+      "One ACE automatically proves toxic stress",
+      "Support guarantees that the child will never feel distress"
+    ],
+    "ACE 類別與可用支持是不同評估面向；有支持不會抹去事件，但可能緩衝影響。"
+  ],
+
+  [
+    "ACE and health risk", "Core",
+    "A practitioner explains that ACE research identifies associations between childhood adversity and later health. Which further clarification is essential?",
+    [
+      "Population-level associations do not determine any one person's future",
+      "Every person with an ACE will develop the same illness",
+      "A score provides a complete diagnosis",
+      "The research proves that all adversity has the same effect"
+    ],
+    "研究中的風險關聯不等於個人必然結果；ACE 分數也不是診斷。"
+  ],
+
+  [
+    "Stress and social context", "Core",
+    "A worker notices that a client's distress occurs alongside unstable housing, limited income and repeated exclusion. What is the strongest ecological response?",
+    [
+      "Explore personal experiences alongside relationships and structural conditions",
+      "Treat the client's personality as the only possible cause",
+      "Ignore housing because it is outside the person's body",
+      "Assume every member of the same social group responds identically"
+    ],
+    "壓力應放在個人、人際及結構環境中理解，避免只責怪個人或作群體刻板推論。"
+  ],
+
+  [
+    "Stress response — Systems interaction", "Core",
+    "A student says, 'The brain responds to stress, but signals from the body cannot influence the brain.' Which correction is best?",
+    [
+      "The brain and bodily systems communicate in both directions",
+      "The brain is unrelated to stress responses",
+      "Only the immune system communicates with the brain",
+      "Bodily systems function independently with no feedback"
+    ],
+    "講義強調大腦接收身體各系統的訊號，也會向其他器官發出訊號。"
+  ],
+
+  [
+    "Allostatic load — Interpretation", "Core",
+    "A clinician reviews several physiological measures when considering possible cumulative stress-related burden. Why is it inappropriate to infer a complete diagnosis from one measure alone?",
+    [
+      "A single measure does not capture the whole pattern or establish its cause",
+      "Any one measure always identifies all past adversity",
+      "Physiological measures can never change",
+      "Allostatic load is identical to the number of ACE categories"
+    ],
+    "單一生理指標不足以反映所有系統，也不能單獨確定原因或診斷。"
+  ],
+
+  [
+    "Stress response — Integrated assessment", "Core",
+    "A child has frequent sleep difficulties following repeated family conflict. A teacher asks whether this proves toxic stress. What is the best response?",
+    [
+      "Assess the pattern of adversity, duration, supports and the child's broader circumstances",
+      "Sleep difficulty alone proves toxic stress",
+      "Family conflict can never affect sleep",
+      "Assign an ACE score without asking about the child's experiences"
+    ],
+    "睡眠困難值得關注，但不能單憑症狀確診 toxic stress；應了解逆境、時間及支持。"
+  ],
+
+  // ==================================================
+  // SUPPLEMENTARY QUESTIONS
+  // ==================================================
+
+  [
+    "Stressor versus stress", "Supplementary",
+    "A worker is made redundant and becomes worried that available savings will not cover rent. Which pairing best distinguishes the external event from the person's appraisal?",
+    [
+      "Job loss is a stressor; the perceived inability to cope contributes to stress",
+      "Job loss is homeostasis; worry is an ACE category",
+      "Job loss is a hormone; worry is a workplace policy",
+      "Both terms necessarily mean the same thing"
+    ],
+    "Stressor 指外在挑戰或事件；stress 指個人感到需求超出應對資源的主觀狀態。"
+  ],
+
+  [
+    "Appraisal", "Supplementary",
+    "Two employees receive the same new task. One considers it manageable; the other believes it exceeds available time and support. What does this illustrate?",
+    [
+      "People can appraise the same external demand differently",
+      "An event must produce identical stress in everyone",
+      "The second employee necessarily has a psychiatric disorder",
+      "Resources are irrelevant to appraisal"
+    ],
+    "同一外在事件可因經驗、資源及評估不同而產生不同壓力感受。"
+  ],
+
+  [
+    "SNS", "Supplementary",
+    "A person encounters an immediate threat and rapidly develops a faster heartbeat and wider airways. Which pathway is most closely associated with this rapid response?",
+    [
+      "Sympathetic nervous system",
+      "A parenting-style classification",
+      "A social contract",
+      "The process of bereavement"
+    ],
+    "交感神經系統參與快速的 fight-or-flight 反應，例如心跳加快及氣道擴張。"
+  ],
+
+  [
+    "HPA axis", "Supplementary",
+    "Which sequence correctly names the structures in the HPA axis?",
+    [
+      "Hypothalamus, pituitary, adrenal glands",
+      "Hippocampus, pancreas, amygdala",
+      "Heart, pituitary, arteries",
+      "Hypothalamus, pancreas, auditory cortex"
+    ],
+    "HPA 指 hypothalamic–pituitary–adrenal：下丘腦、腦下垂體及腎上腺。"
+  ],
+
+  [
+    "SNS versus HPA", "Supplementary",
+    "A student compares two stress-response pathways. Which pairing is most appropriate as a simplified description?",
+    [
+      "SNS: rapid response associated with adrenaline; HPA axis: hormonal response associated with cortisol",
+      "SNS: ACE scoring; HPA axis: social identity",
+      "SNS: cortisol only; HPA axis: no hormones",
+      "SNS: family relationships; HPA axis: educational policy"
+    ],
+    "簡化而言，SNS 與快速反應及腎上腺素相關；HPA 軸與 cortisol 分泌相關。兩者並非完全孤立運作。"
+  ],
+
+  [
+    "Amygdala", "Supplementary",
+    "When studying responses to perceived danger, a researcher focuses on a brain structure involved in processing fear and threat-related emotion. Which structure is most relevant?",
+    [
+      "Amygdala",
+      "Hippocampus",
+      "Cerebellum",
+      "Pituitary gland"
+    ],
+    "Amygdala（杏仁核）與情緒及威脅相關處理有關；它不是唯一參與的腦部結構。"
+  ],
+
+  [
+    "Hippocampus", "Supplementary",
+    "A researcher examining stress and learning focuses on a brain structure important for memory. Which structure is most directly relevant?",
+    [
+      "Hippocampus",
+      "Amygdala",
+      "Adrenal gland",
+      "Heart"
+    ],
+    "Hippocampus（海馬體）與記憶及學習有關；講義亦提及它受壓力荷爾蒙影響。"
+  ],
+
+  [
+    "Hypothalamus", "Supplementary",
+    "In the HPA pathway, which structure helps initiate hormonal signalling in response to a perceived demand?",
+    [
+      "Hypothalamus",
+      "A residential care policy",
+      "The social network alone",
+      "A skin conductance reading"
+    ],
+    "Hypothalamus（下丘腦）是 HPA 軸的重要起點，與腦下垂體及腎上腺的訊號調節有關。"
+  ],
+
+  [
+    "ACE scoring — Repeated incidents", "Supplementary",
+    "A client reports repeated emotional abuse throughout childhood and no other ACE categories. Under the conventional 10-category scoring method, what is the score?",
+    [
+      "1",
+      "2",
+      "4",
+      "The number of incidents"
+    ],
+    "傳統 ACE 計分按不同類別計算；同一類 emotional abuse 即使發生多次，該類別仍計一分。"
+  ],
+
+  [
+    "ACE scoring — Different categories", "Supplementary",
+    "Before age 18, a client experienced physical abuse and emotional neglect. The client reports no other ACE categories. What is the conventional ACE score?",
+    [
+      "2",
+      "1",
+      "3",
+      "4"
+    ],
+    "Physical abuse 和 emotional neglect 是兩個不同類別，各計一分，共二分。"
+  ],
+
+  [
+    "ACE scoring — Case calculation", "Supplementary",
+    "Before age 18, a client experienced emotional abuse and physical neglect, lived with a parent with problematic alcohol use, and witnessed the father physically assault the mother. No other ACE categories are reported. What is the conventional ACE score?",
+    [
+      "4",
+      "2",
+      "3",
+      "5"
+    ],
+    "四個不同類別：emotional abuse、physical neglect、household substance misuse、violence against mother，因此共四分。"
+  ],
+
+  [
+    "ACE scoring — Missing information", "Supplementary",
+    "A client confirms parental separation but has not yet been asked about the other ACE categories. What can the worker responsibly conclude?",
+    [
+      "At least one category is supported; the complete score cannot yet be determined",
+      "The complete score is definitely one",
+      "The score is definitely ten",
+      "The client has no childhood adversity"
+    ],
+    "已知至少一類；因其他類別未評估，不能把完整分數確定為一，也不能自行增加類別。"
+  ],
+
+  [
+    "Childhood adversity versus ACE", "Supplementary",
+    "A child experiences repeated bullying outside the home. No conventional home-based ACE category is reported. Which interpretation is most appropriate?",
+    [
+      "Bullying is childhood adversity but is not automatically one of the conventional 10 ACE categories",
+      "Bullying must be counted as physical neglect",
+      "The child has no significant adversity",
+      "Every adversity framework uses exactly the same categories"
+    ],
+    "Childhood adversity 的範圍比傳統十類 home-based ACE 廣；欺凌值得重視，但不能自行改算成另一 ACE。"
+  ],
+
+  [
+    "ACE score — Limits", "Supplementary",
+    "An agency wants to use a client's ACE score as the sole basis for predicting future illness. What is the strongest objection?",
+    [
+      "The score does not capture the full context, support, severity or individual outcome",
+      "The score is a complete clinical diagnosis",
+      "A score describes every relevant experience in a person's life",
+      "Individual differences have no relevance"
+    ],
+    "ACE 分數未完整反映事件嚴重程度、時間、保護因素或個人經驗，不能單獨預測或診斷。"
+  ],
+
+  [
+    "Allostatic load — Measurement", "Supplementary",
+    "A study combines measures such as blood pressure, glucose and cholesterol to investigate cumulative physiological burden. Which interpretation is best?",
+    [
+      "Multiple biomarkers can inform research on allostatic load, but interpretation depends on the measures and context",
+      "The combined score identifies the exact cause of every illness",
+      "One high reading proves a specific childhood experience",
+      "Biomarkers provide a person's complete social history"
+    ],
+    "多項生物指標可用於研究累積生理負荷，但不同研究的指標及方法可有差異；結果不能單獨證明原因。"
+  ]
+
+];
+
+// ==================================================
+// QUIZ ENGINE
+// ==================================================
+
+const storageKey = "ss5212-lecture10-stress-ace-quiz-v1";
+
+const quiz = document.getElementById("quiz");
+const result = document.getElementById("result");
+const progress = document.getElementById("progress");
+const storageMessage = document.getElementById("storageMessage");
+
+let submitted = false;
+let state = null;
+
+function shuffle(values) {
+  const copy = values.slice();
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function newState() {
+  return {
+    order: shuffle(
+      questions.map((_, index) => index)
+    ),
+
+    options: questions.map(() =>
+      shuffle([0, 1, 2, 3])
+    ),
+
+    answers: {}
+  };
+}
+
+function isPermutation(array, length) {
+  if (!Array.isArray(array) || array.length !== length) {
+    return false;
+  }
+
+  const values = new Set(array);
+
+  if (values.size !== length) {
+    return false;
+  }
+
+  for (let i = 0; i < length; i++) {
+    if (!values.has(i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function validState(value) {
+  return (
+    value &&
+    isPermutation(value.order, questions.length) &&
+    Array.isArray(value.options) &&
+    value.options.length === questions.length &&
+    value.options.every(order => isPermutation(order, 4)) &&
+    value.answers &&
+    typeof value.answers === "object" &&
+    !Array.isArray(value.answers)
+  );
+}
+
+try {
+  const saved = localStorage.getItem(storageKey);
+
+  if (saved) {
+    const parsed = JSON.parse(saved);
+
+    if (validState(parsed)) {
+      state = parsed;
+    }
+  }
+} catch (error) {
+  storageMessage.textContent =
+    "Saved progress could not be loaded. Browser storage may be unavailable.";
+}
+
+if (!state) {
+  state = newState();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify(state)
+    );
+  } catch (error) {
+    storageMessage.textContent =
+      "Browser storage is unavailable. Your progress may not be saved.";
+  }
+}
+
+function validAnswer(questionId) {
+  const value = state.answers[questionId];
+
+  return (
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value < questions[questionId][3].length
+  );
+}
+
+function updateProgress() {
+  const answered = state.order.filter(validAnswer).length;
+
+  progress.textContent =
+    `Answered: ${answered} / ${questions.length}`;
+}
+
+function hideResults() {
+  result.style.display = "none";
+  result.textContent = "";
+
+  document.querySelectorAll(".feedback").forEach(box => {
+    box.style.display = "none";
+    box.textContent = "";
+  });
+
+  submitted = false;
+}
+
+function renderQuiz() {
+  quiz.textContent = "";
+
+  state.order.forEach((questionId, displayNumber) => {
+    const item = questions[questionId];
+
+    const section = document.createElement("section");
+    section.className = "question";
+
+    const heading = document.createElement("h2");
+    heading.textContent =
+      `Question ${displayNumber + 1}. ${item[2]}`;
+    section.appendChild(heading);
+
+    state.options[questionId].forEach(
+      (optionId, position) => {
+        const label = document.createElement("label");
+        const radio = document.createElement("input");
+
+        radio.type = "radio";
+        radio.name = `question-${questionId}`;
+        radio.value = String(optionId);
+
+        if (
+          validAnswer(questionId) &&
+          state.answers[questionId] === optionId
+        ) {
+          radio.checked = true;
+        }
+
+        radio.addEventListener("change", () => {
+          state.answers[questionId] = optionId;
+
+          saveState();
+          updateProgress();
+
+          if (submitted) {
+            hideResults();
+          }
+        });
+
+        const letter = String.fromCharCode(65 + position);
+
+        label.appendChild(radio);
+
+        label.appendChild(
+          document.createTextNode(
+            `${letter}. ${item[3][optionId]}`
+          )
+        );
+
+        section.appendChild(label);
+      }
+    );
+
+    const feedback = document.createElement("div");
+    feedback.className = "feedback";
+    feedback.id = `feedback-${questionId}`;
+
+    section.appendChild(feedback);
+    quiz.appendChild(section);
+  });
+
+  updateProgress();
+}
+
+function submitQuiz() {
+  let score = 0;
+  let unanswered = 0;
+
+  let coreScore = 0;
+  let coreTotal = 0;
+
+  let supplementaryScore = 0;
+  let supplementaryTotal = 0;
+
+  state.order.forEach(questionId => {
+    const item = questions[questionId];
+
+    const hasAnswer = validAnswer(questionId);
+
+    const isCorrect =
+      hasAnswer &&
+      state.answers[questionId] === 0;
+
+    if (!hasAnswer) {
+      unanswered++;
+    }
+
+    if (isCorrect) {
+      score++;
+    }
+
+    if (item[1] === "Core") {
+      coreTotal++;
+
+      if (isCorrect) {
+        coreScore++;
+      }
+    } else {
+      supplementaryTotal++;
+
+      if (isCorrect) {
+        supplementaryScore++;
+      }
+    }
+
+    const feedback = document.getElementById(
+      `feedback-${questionId}`
+    );
+
+    const correctPosition =
+      state.options[questionId].indexOf(0);
+
+    const correctLetter =
+      String.fromCharCode(65 + correctPosition);
+
+    feedback.textContent = "";
+
+    const status = document.createElement("strong");
+    status.className = isCorrect
+      ? "correct"
+      : "incorrect";
+
+    if (!hasAnswer) {
+      status.textContent = "未作答";
+    } else if (isCorrect) {
+      status.textContent = "✓ 答對了";
+    } else {
+      status.textContent = "✗ 答錯了";
+    }
+
+    const topic = document.createElement("p");
+    topic.textContent =
+      `${item[1]} — ${item[0]}`;
+
+    const answer = document.createElement("p");
+    answer.textContent =
+      `Correct answer: ${correctLetter}. ${item[3][0]}`;
+
+    const explanation = document.createElement("p");
+    explanation.textContent = item[4];
+
+    feedback.appendChild(status);
+    feedback.appendChild(topic);
+    feedback.appendChild(answer);
+    feedback.appendChild(explanation);
+
+    feedback.style.display = "block";
+  });
+
+  result.textContent = "";
+
+  const heading = document.createElement("h2");
+  heading.textContent =
+    `Your result: ${score} / ${questions.length}`;
+
+  const percentage = document.createElement("p");
+  percentage.textContent =
+    `Score: ${Math.round(score / questions.length * 100)}%`;
+
+  const core = document.createElement("p");
+  core.textContent =
+    `Core: ${coreScore} / ${coreTotal}`;
+
+  const supplementary = document.createElement("p");
+  supplementary.textContent =
+    `Supplementary: ${supplementaryScore} / ${supplementaryTotal}`;
+
+  const missing = document.createElement("p");
+  missing.textContent =
+    `Unanswered: ${unanswered}`;
+
+  const review = document.createElement("p");
+  review.textContent =
+    "Scroll down to review the topics, answers and Chinese explanations.";
+
+  result.appendChild(heading);
+  result.appendChild(percentage);
+  result.appendChild(core);
+  result.appendChild(supplementary);
+  result.appendChild(missing);
+  result.appendChild(review);
+
+  result.style.display = "block";
+  submitted = true;
+
+  result.scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+function resetQuiz() {
+  const confirmed = confirm(
+    "Reset all answers and shuffle the quiz again?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  state = newState();
+
+  saveState();
+  hideResults();
+  renderQuiz();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+document
+  .getElementById("submitButton")
+  .addEventListener("click", submitQuiz);
+
+document
+  .getElementById("resetButton")
+  .addEventListener("click", resetQuiz);
+
+saveState();
+renderQuiz();
+</script>
+
+</body>
+</html>
